@@ -80,7 +80,8 @@ class Musician(ValidatedModel):
     name = models.CharField(max_length=150)
     nationality = models.CharField(max_length=2)
     instrument = models.CharField(max_length=25, choices=INSTRUMENTS)
-    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="members")
+    author = models.ForeignKey(Author, on_delete=models.CASCADE)
+    authors = models.ManyToManyField(to=Author, through='RelationshipAuthorMusician', related_name='authors')
 
 
 class Album(ValidatedModel):
@@ -125,6 +126,7 @@ class Song(ValidatedModel):
     last_modified = models.DateTimeField(auto_now=True)
     last_modified_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL,
                                          null=True, blank=True, related_name="songs_last_modified")
+    authors = models.ManyToManyField(to=Author, through='RelationshipAuthorSong', related_name='song_authors')
 
     class Meta:
         """Metadata."""
@@ -144,3 +146,65 @@ class Profile(ValidatedModel):
     preferred_style = models.CharField(max_length=30, choices=Song.STYLES)
     preferred_song = models.ForeignKey(Song, on_delete=models.SET_NULL,
                                        null=True, blank=True)
+
+
+class RelationshipAuthorMusician(ValidatedModel):
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="members")
+    musician = models.ForeignKey(Musician, on_delete=models.CASCADE)
+    start = models.SmallIntegerField(null=True, blank=True)
+    end = models.SmallIntegerField(null=True, blank=True)
+    
+
+class RelationshipAuthorSong(ValidatedModel):
+    author = models.ForeignKey(Author, on_delete=models.CASCADE, related_name="song_to_author")
+    song= models.ForeignKey(Song, on_delete=models.CASCADE, related_name="author_to_song")
+
+# Task2
+
+"""
+1.
+In [3]: song_15 = Song.objects.get(pk=15)
+
+In [4]: song_15.authors.add(30, 40)
+
+In [5]: Song.objects.get(pk=15).authors.all()
+Out[5]: <QuerySet [<Author: Author object (30)>, <Author: Author object (40)>]>
+"""
+
+"""
+2.
+
+In [6]: author_50 = Author.objects.get(pk=50)
+
+In [7]: author_50.song_authors.add(10,20,30,40)
+
+In [12]: Author.objects.get(pk=50).song_authors.all()
+
+Out[12]: <QuerySet [<Song: Song object (10)>, <Song: Song object (20)>, <Song: Song object (30)>, <Song: Song object (40)>]>
+
+"""
+
+"""
+3.
+
+In [2]: author_100 = Author.objects.get(pk=100)
+
+In [3]: author_100.authors.add(10,20,30,40)
+
+In [4]: Author.objects.get(pk=100).authors.all()
+
+Out[4]: <QuerySet [<Musician: Musician object (10)>, <Musician: Musician object (20)>, <Musician: Musician object (30)>, <Musician: Musician object (40)>]>
+
+
+"""
+
+"""
+4.
+
+In [7]: musicians = Musician.objects.filter(authors__id = 100).values('name','instrument')
+
+In [8]: musicians
+
+Out[8]: <QuerySet [{'name': 'Noah Garcia', 'instrument': 'clarinet'}, {'name': 'Loretta Schumacher', 'instrument': 'eguitar'}, {'name': 'Liam Perez', 'instrument': 'piano'}, {'name': 'Arnold Hutticher', 'instrument': 'trombone'}]>
+
+"""

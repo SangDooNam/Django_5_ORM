@@ -30,7 +30,8 @@ class Task1(TestCase):
         self.musician_params = {
             "name": "Test musician",
             "instrument": "sax",
-            "nationality": "DE"
+            "nationality": "DE",
+            'author' : self.author.objects.create(**self.author_params)
         }
         super().setUpClass()
 
